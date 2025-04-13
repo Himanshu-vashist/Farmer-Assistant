@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "453648587310",
+    "project_id": "farmer-assistant-bf3f1",
+    "storage_bucket": "farmer-assistant-bf3f1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:453648587310:android:cdad6a6dfce3155df21dbf",
+        "android_client_info": {
+          "package_name": "com.farmer.farmerAssistant"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "453648587310-oalu3vc9nlbp3gmff3go53mtitujtdn7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVSgcLoFYnsC6TfiQo7FqBwEbaCzPyG04"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "453648587310-oalu3vc9nlbp3gmff3go53mtitujtdn7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
