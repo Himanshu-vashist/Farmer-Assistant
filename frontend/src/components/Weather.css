@@ -1,0 +1,239 @@
+.weather-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+.search-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #e74c3c;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #fadbd8;
+    border-radius: 4px;
+}
+
+.current-weather {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.current-weather h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.temp-display {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin: 10px 0;
+}
+
+.temp {
+    font-size: 48px;
+    font-weight: bold;
+}
+
+.unit {
+    font-size: 24px;
+    margin-top: 5px;
+}
+
+.description {
+    font-size: 18px;
+    text-transform: capitalize;
+}
+
+.air-conditions {
+    margin-bottom: 30px;
+}
+
+.air-conditions h3 {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.conditions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.condition-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.label {
+    font-weight: bold;
+}
+
+.weekly-forecast h3 {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.forecast-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.forecast-card {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.forecast-card .day {
+    font-weight: bold;
+    grid-column: 1;
+}
+
+.forecast-card .temp {
+    font-size: 18px;
+    font-weight: bold;
+    grid-column: 2;
+    text-align: right;
+}
+
+.forecast-card .description {
+    grid-column: 1 / span 2;
+    text-transform: capitalize;
+}
+
+.forecast-card .details {
+    grid-column: 1 / span 2;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #666;
+}
+
+/*inputs*/
+/* Previous styles remain the same, add these new styles at the end */
+
+.crop-suggestion-form {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f0f8ff;
+    border-radius: 8px;
+}
+
+.crop-suggestion-form h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    border-bottom: 1px solid #b0c4de;
+    padding-bottom: 10px;
+}
+
+.soil-inputs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.input-group input {
+    padding: 8px;
+    border: 1px solid #b0c4de;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.suggest-button {
+    padding: 10px 20px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.suggest-button:hover {
+    background-color: #2ecc71;
+}
+
+.suggest-button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+.crop-suggestion-result {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #e8f8f5;
+    border-radius: 8px;
+}
+
+.crop-suggestion-result h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    border-bottom: 1px solid #a3e4d7;
+    padding-bottom: 10px;
+}
+
+.suggestion-text {
+    white-space: pre-line;
+    line-height: 1.6;
+}
