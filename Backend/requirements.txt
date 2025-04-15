@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-dotenv
+SpeechRecognition
+langchain-google-genai
+langdetect
+googletrans==3.1.0a0
+pandas
+requests
+geopy
+meteostat
+python-multipart
+pydantic
