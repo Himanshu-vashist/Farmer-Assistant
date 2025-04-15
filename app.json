@@ -12,7 +12,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    
     "ios": {
       "config": {
         "googleMobileAdsAppId": "ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy"
@@ -28,6 +27,9 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.anonymous.KnowledgeBubble"
-    }
+    },
+    "plugins": [
+      "expo-speech-recognition"
+    ]
   }
 }
