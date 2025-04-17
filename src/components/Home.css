@@ -1,0 +1,38 @@
+/* src/components/Home.css */
+.home-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 100px;
+    font-family: 'Arial', sans-serif;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+p {
+    margin-bottom: 30px;
+    font-size: 1.2rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 20px;
+}
+
+.role-btn {
+    padding: 12px 25px;
+    font-size: 1rem;
+    border: none;
+    background-color: #0b8457;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.role-btn:hover {
+    background-color: #086d47;
+}

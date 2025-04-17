@@ -1,0 +1,216 @@
+/* farmer.css */
+.farmer-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fa;
+    color: #2c3e50;
+}
+
+.farmer-dashboard h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 32px;
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+.farmer-dashboard h2 {
+    color: #3498db;
+    margin: 24px 0 18px;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 8px;
+    font-size: 1.6rem;
+}
+
+.registration-form,
+.crop-form {
+    background: #ffffff;
+    padding: 28px;
+    border-radius: 12px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.07);
+    margin-bottom: 32px;
+    transition: box-shadow 0.3s ease;
+}
+
+.registration-form:hover,
+.crop-form:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.registration-form label,
+.crop-form label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #34495e;
+}
+
+.registration-form input,
+.crop-form input,
+.registration-form select,
+.crop-form select,
+.crop-form textarea {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 20px;
+    border: 1px solid #bdc3c7;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s;
+    background-color: #fff;
+}
+
+.registration-form input:focus,
+.crop-form input:focus,
+.registration-form select:focus,
+.crop-form select:focus,
+.crop-form textarea:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    outline: none;
+}
+
+.crop-form textarea {
+    min-height: 130px;
+    resize: vertical;
+}
+
+.submit-btn,
+.cancel-btn,
+.remove-btn,
+.approve-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.submit-btn {
+    background-color: #27ae60;
+    color: #fff;
+}
+
+.submit-btn:hover {
+    background-color: #2ecc71;
+    transform: scale(1.03);
+}
+
+.cancel-btn {
+    background-color: #e74c3c;
+    color: white;
+    margin-left: 15px;
+}
+
+.cancel-btn:hover {
+    background-color: #c0392b;
+    transform: scale(1.03);
+}
+
+.remove-btn {
+    background-color: #e74c3c;
+    color: white;
+    margin-top: 10px;
+}
+
+.remove-btn:hover {
+    background-color: #c0392b;
+}
+
+.crops-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 30px;
+}
+
+.crop-card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.crop-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.crop-card h3 {
+    margin: 0 0 10px;
+    font-size: 1.3rem;
+    color: #2c3e50;
+}
+
+.crop-card p {
+    color: #7f8c8d;
+    margin: 6px 0;
+}
+
+.status-available {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.status-sold {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+.interests-list {
+    margin-top: 40px;
+}
+
+.interest-card {
+    background: #f0f4f8;
+    border-left: 5px solid #3498db;
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+}
+
+.interest-card h4 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.approve-btn {
+    background-color: #3498db;
+    color: white;
+    margin-top: 10px;
+}
+
+.approve-btn:hover {
+    background-color: #2980b9;
+}
+
+.approved-badge {
+    color: #27ae60;
+    font-weight: 600;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+@media (max-width: 768px) {
+    .crops-list {
+        grid-template-columns: 1fr;
+    }
+
+    .farmer-dashboard {
+        padding: 16px;
+    }
+
+    .submit-btn,
+    .cancel-btn,
+    .remove-btn,
+    .approve-btn {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
