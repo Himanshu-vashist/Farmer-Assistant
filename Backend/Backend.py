@@ -1,11 +1,12 @@
 import os
 import logging
 import speech_recognition as sr
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, status
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, status, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from io import BytesIO
+import io
 import uvicorn
 import re
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -16,7 +17,7 @@ import langid
 from googletrans import Translator
 import pandas as pd
 import requests
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 from collections import defaultdict
 from geopy.geocoders import Nominatim
 import google.generativeai as genai
@@ -25,7 +26,9 @@ from dotenv import load_dotenv
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import firebase_admin
 from firebase_admin import credentials, auth
-
+import base64
+from gtts import gTTS
+from PIL import Image
 # Initialize Firebase Admin - Disabled for development
 # cred = credentials.Certificate("path/to/your/serviceAccountKey.json")
 # firebase_admin.initialize_app(cred)
@@ -81,6 +84,7 @@ OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY").strip('"')
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY").strip('"')
 genai.configure(api_key=GOOGLE_API_KEY)
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=GOOGLE_API_KEY)
+model = genai.GenerativeModel("gemini-2.0-flash")
 chat_history = []
 translator = Translator()
 
@@ -376,6 +380,64 @@ async def simple_response(request: dict = None):
         "response": "This is a fixed response from the server. Growing tomatoes requires well-drained soil, regular watering, and plenty of sunlight. Start by planting seedlings after the last frost, and provide support as they grow. Water at the base of the plant to prevent leaf diseases.",
         "language": "en"
     }
+
+
+
+    # soham
+@app.post("/classify")
+async def classify_image(image: UploadFile = File(...), language: str = Form(...)):
+    try:
+        # Read and process image
+        image_data = await image.read()
+        image = Image.open(io.BytesIO(image_data))
+        image_bytes = io.BytesIO()
+        image.save(image_bytes, format="PNG")
+        image_bytes.seek(0)
+
+        # Gemini API prompt
+        prompt = """
+You are a plant pathologist AI. Based on the image provided, classify the plant disease in the image.
+
+Please provide the following information in a structured format:
+1. Disease Name: The name of the disease (if any).
+2. Affected Plant Part: Which part seems to be affected (leaf, stem, fruit, etc.).
+3. Detailed Description: Visual symptoms and explanation of how the disease looks.
+4. Cause: What causes this disease (bacteria, fungus, virus, etc.).
+5. Severity Level: Mild, moderate, or severe.
+6. Recommended Treatment: Suggested pesticides or organic treatments.
+7. Preventive Measure : How to prevent it in the future.
+8. Impact on Crop Yield : How this disease may affect overall productivity.
+
+Be detailed and use layman-friendly language so that even a farmer with no technical background can understand and act upon it. Dont use * IN THE FORMAT NO NEED TO MAKE IT BOLD
+"""
+
+        # Call Gemini API
+        response = model.generate_content([
+            {"text": prompt},
+            {"mime_type": "image/png", "data": image_bytes.read()}
+        ])
+        diagnosis_text = response.text
+
+        # Translate if needed
+        lang_map = {"English": "en", "Hindi": "hi", "Bengali": "bn"}
+        lang_code = lang_map.get(language, "en")
+        if language != "English":
+            translation = translator.translate(diagnosis_text, dest=lang_code)
+            diagnosis_text = translation.text
+
+        # Generate audio (first 100 characters)
+        voice_text = diagnosis_text[:100]
+        tts = gTTS(text=voice_text, lang=lang_code)
+        audio_bytes = io.BytesIO()
+        tts.write_to_fp(audio_bytes)
+        audio_bytes.seek(0)
+        audio_base64 = base64.b64encode(audio_bytes.read()).decode("utf-8")
+
+        return {"diagnosis": diagnosis_text, "audio": audio_base64}
+
+    except Exception as e:
+        logging.error(f"Image classification failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Image classification failed: {str(e)}")
 
 # Run the server
 if __name__ == "__main__":
