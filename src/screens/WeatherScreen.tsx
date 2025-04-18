@@ -255,13 +255,18 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import API_BASE_URL from '../config/api';
+import theme from '../theme/theme';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import Input from '../components/Input';
 
 // TypeScript Interfaces
 interface ForecastDay {
@@ -275,22 +280,24 @@ interface ForecastResponse {
   forecast: string;
 }
 
-interface CropSuggestionResponse {
-  suggested_crops: string;
-}
+
+
+const getWeatherIcon = (description: string) => {
+  const desc = description.toLowerCase();
+  if (desc.includes('rain')) return 'rainy';
+  if (desc.includes('cloud')) return 'cloudy';
+  if (desc.includes('clear')) return 'sunny';
+  if (desc.includes('thunder')) return 'thunderstorm';
+  if (desc.includes('snow')) return 'snow';
+  return 'partly-sunny';
+};
 
 const Weather: React.FC = () => {
   // State with TypeScript types
   const [city, setCity] = useState<string>('');
-  const [N, setN] = useState<string>('');
-  const [P, setP] = useState<string>('');
-  const [K, setK] = useState<string>('');
-  const [pH, setPH] = useState<string>('');
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
-  const [cropSuggestion, setCropSuggestion] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [showCropForm, setShowCropForm] = useState<boolean>(false);
 
   // Fetch weather forecast
   const getForecast = async () => {
@@ -301,7 +308,7 @@ const Weather: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('http://127.0.0.1:8000/forecast', {
+      const res = await fetch(`${API_BASE_URL}/forecast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ city }),
@@ -313,41 +320,6 @@ const Weather: React.FC = () => {
 
       const data: ForecastResponse = await res.json();
       setForecast(data);
-      setShowCropForm(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch crop suggestion
-  const getCropSuggestion = async () => {
-    if (!N || !P || !K || !pH) {
-      setError('Please fill in all soil nutrient fields');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('http://127.0.0.1:8000/crop-suggestion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          city,
-          N: parseInt(N),
-          P: parseInt(P),
-          K: parseInt(K),
-          pH: parseFloat(pH),
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to get crop suggestion');
-      }
-
-      const data: CropSuggestionResponse = await res.json();
-      setCropSuggestion(data.suggested_crops);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -402,185 +374,112 @@ const Weather: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Weather & Crop Suggestion</Text>
-        <Text style={styles.date}>{new Date().toLocaleString()}</Text>
-      </View>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <LinearGradient
+        colors={[theme.colors.primary, theme.colors.primaryLight]}
+        style={styles.header}
+      >
+        <Animated.View entering={FadeIn.duration(800)}>
+          <Text style={styles.title}>Weather Forecast</Text>
+          <Text style={styles.date}>{new Date().toLocaleString()}</Text>
+        </Animated.View>
+      </LinearGradient>
 
       {/* Search Section */}
-      <View style={styles.card}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter city"
+      <Animated.View entering={FadeInDown.delay(200).duration(800)}>
+        <Card style={styles.searchCard}>
+          <Input
+            label="Location"
+            placeholder="Enter city name"
             value={city}
             onChangeText={setCity}
-            placeholderTextColor="#999"
+            icon="location-outline"
+            containerStyle={styles.inputContainer}
           />
-          <TouchableOpacity
-            style={[styles.button, loading || !city.trim() ? styles.buttonDisabled : {}]}
+          <Button
+            title="Get Weather Forecast"
             onPress={getForecast}
+            loading={loading}
             disabled={loading || !city.trim()}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Get Forecast</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-        {error && <Text style={styles.error}>{error}</Text>}
-      </View>
+            icon="cloud-outline"
+            style={styles.searchButton}
+          />
+          {error && <Text style={styles.error}>{error}</Text>}
+        </Card>
+      </Animated.View>
 
       {/* Weather Forecast Section */}
       {forecast && (
         <>
           {/* Current Weather */}
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>{city.toUpperCase()}</Text>
-            <Text style={styles.subtitle}>
-              Today {currentWeather.date.split('-')[2] || 'N/A'}
-            </Text>
-            <View style={styles.tempContainer}>
-              <Text style={styles.temp}>{currentWeather.temp}</Text>
-              <Text style={styles.unit}>°C</Text>
-            </View>
-            <Text style={styles.description}>{currentWeather.description}</Text>
-          </View>
-
-          {/* Air Conditions */}
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Air Conditions</Text>
-            <View style={styles.conditionsGrid}>
-              <View style={styles.conditionItem}>
-                <Text style={styles.label}>Real Feel</Text>
-                <Text style={styles.value}>{currentWeather.temp}°C</Text>
-              </View>
-              <View style={styles.conditionItem}>
-                <Text style={styles.label}>Humidity</Text>
-                <Text style={styles.value}>{currentWeather.humidity}%</Text>
-              </View>
-              <View style={styles.conditionItem}>
-                <Text style={styles.label}>Wind</Text>
-                <Text style={styles.value}>N/A m/s</Text>
-              </View>
-              <View style={styles.conditionItem}>
-                <Text style={styles.label}>Clouds</Text>
-                <Text style={styles.value}>N/A %</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Weekly Forecast */}
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Weekly Forecast</Text>
-            <View style={styles.forecastGrid}>
-              {forecastDays.map((day, index) => (
-                <View key={index} style={styles.forecastCard}>
-                  <Text style={styles.forecastDay}>
-                    {index === 0 ? 'Today' : day.date || 'N/A'}
-                  </Text>
-                  <Text style={styles.forecastTemp}>{day.temp}°C</Text>
-                  <Text style={styles.forecastDescription}>{day.description}</Text>
-                  <Text style={styles.forecastDetails}>
-                    Humidity: {day.humidity || 'N/A'}%
+          <Animated.View entering={FadeInDown.delay(300).duration(800)}>
+            <Card style={styles.weatherCard}>
+              <View style={styles.currentWeatherHeader}>
+                <View>
+                  <Text style={styles.cityName}>{city.toUpperCase()}</Text>
+                  <Text style={styles.weatherDate}>
+                    Today {currentWeather.date.split('-')[2] || 'N/A'}
                   </Text>
                 </View>
+                <Ionicons
+                  name={getWeatherIcon(currentWeather.description)}
+                  size={48}
+                  color={theme.colors.primary}
+                />
+              </View>
+
+              <View style={styles.tempContainer}>
+                <Text style={styles.temp}>{currentWeather.temp}</Text>
+                <Text style={styles.unit}>°C</Text>
+              </View>
+              <Text style={styles.description}>{currentWeather.description}</Text>
+
+              <View style={styles.conditionsGrid}>
+                <View style={styles.conditionItem}>
+                  <Ionicons name="thermometer-outline" size={24} color={theme.colors.textSecondary} />
+                  <View style={styles.conditionTextContainer}>
+                    <Text style={styles.conditionLabel}>Real Feel</Text>
+                    <Text style={styles.conditionValue}>{currentWeather.temp}°C</Text>
+                  </View>
+                </View>
+                <View style={styles.conditionItem}>
+                  <Ionicons name="water-outline" size={24} color={theme.colors.textSecondary} />
+                  <View style={styles.conditionTextContainer}>
+                    <Text style={styles.conditionLabel}>Humidity</Text>
+                    <Text style={styles.conditionValue}>{currentWeather.humidity}%</Text>
+                  </View>
+                </View>
+              </View>
+            </Card>
+          </Animated.View>
+
+          {/* Weekly Forecast */}
+          <Animated.View entering={FadeInDown.delay(400).duration(800)}>
+            <Card title="5-Day Forecast" style={styles.forecastCard}>
+              {forecastDays.map((day, index) => (
+                <View key={index} style={styles.forecastDay}>
+                  <Text style={styles.forecastDayText}>
+                    {index === 0 ? 'Today' : day.date.split('-')[2] || 'N/A'}
+                  </Text>
+                  <Ionicons
+                    name={getWeatherIcon(day.description)}
+                    size={28}
+                    color={theme.colors.primary}
+                  />
+                  <Text style={styles.forecastTemp}>{day.temp}°C</Text>
+                  <Text style={styles.forecastHumidity}>{day.humidity}%</Text>
+                </View>
               ))}
-            </View>
-          </View>
+            </Card>
+          </Animated.View>
         </>
       )}
 
-      {/* Crop Suggestion Form */}
-      {showCropForm && (
-        <View style={styles.card}>
-          <View style={styles.formHeader}>
-            <Text style={styles.sectionTitle}>Crop Suggestion</Text>
-            <TouchableOpacity onPress={() => setShowCropForm(!showCropForm)}>
-              <Text style={styles.toggleText}>
-                {showCropForm ? 'Hide' : 'Show'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {showCropForm && (
-            <>
-              <Text style={styles.formSubtitle}>
-                Enter soil nutrient values:
-              </Text>
-              <View style={styles.soilInputs}>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Nitrogen (N)</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={N}
-                    onChangeText={setN}
-                    placeholder="e.g. 50"
-                    keyboardType="numeric"
-                    placeholderTextColor="#999"
-                  />
-                </View>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Phosphorus (P)</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={P}
-                    onChangeText={setP}
-                    placeholder="e.g. 30"
-                    keyboardType="numeric"
-                    placeholderTextColor="#999"
-                  />
-                </View>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Potassium (K)</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={K}
-                    onChangeText={setK}
-                    placeholder="e.g. 20"
-                    keyboardType="numeric"
-                    placeholderTextColor="#999"
-                  />
-                </View>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>pH Level</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={pH}
-                    onChangeText={setPH}
-                    placeholder="e.g. 6.5"
-                    keyboardType="decimal-pad"
-                    placeholderTextColor="#999"
-                  />
-                </View>
-              </View>
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  loading || !N || !P || !K || !pH ? styles.buttonDisabled : {},
-                ]}
-                onPress={getCropSuggestion}
-                disabled={loading || !N || !P || !K || !pH}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Get Crop Suggestions</Text>
-                )}
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-      )}
 
-      {/* Crop Suggestion Result */}
-      {cropSuggestion && (
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Recommended Crops</Text>
-          <Text style={styles.suggestionText}>{cropSuggestion}</Text>
-        </View>
-      )}
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>Farmer Assistant © 2025</Text>
+      </View>
     </ScrollView>
   );
 };
@@ -588,177 +487,151 @@ const Weather: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
+    backgroundColor: theme.colors.background,
   },
   header: {
+    padding: theme.spacing.xl,
+    borderBottomLeftRadius: theme.borderRadius.xl,
+    borderBottomRightRadius: theme.borderRadius.xl,
+    marginBottom: theme.spacing.lg,
     alignItems: 'center',
-    marginBottom: 20,
+    ...theme.shadows.lg,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: theme.typography.fontSizes['3xl'],
+    fontWeight: '700',
+    color: theme.colors.card,
+    marginBottom: theme.spacing.xs,
+    textAlign: 'center',
   },
   date: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.card,
+    opacity: 0.8,
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  searchCard: {
+    marginHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  inputContainer: {
+    marginBottom: theme.spacing.md,
   },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    backgroundColor: '#aaa',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  searchButton: {
+    marginTop: theme.spacing.xs,
   },
   error: {
-    color: '#D32F2F',
-    fontSize: 14,
+    color: theme.colors.error,
+    fontSize: theme.typography.fontSizes.sm,
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: theme.spacing.sm,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+  weatherCard: {
+    marginHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 8,
+  currentWeatherHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.md,
+  },
+  cityName: {
+    fontSize: theme.typography.fontSizes.xl,
+    fontWeight: '700',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  weatherDate: {
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.textSecondary,
   },
   tempContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 10,
+    alignItems: 'flex-start',
+    marginVertical: theme.spacing.md,
   },
   temp: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: theme.typography.fontSizes['5xl'],
+    fontWeight: '700',
+    color: theme.colors.text,
+    lineHeight: 56,
   },
   unit: {
-    fontSize: 24,
-    color: '#666',
-    marginLeft: 5,
+    fontSize: theme.typography.fontSizes.xl,
+    color: theme.colors.textSecondary,
+    marginLeft: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
   },
   description: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: theme.typography.fontSizes.lg,
+    color: theme.colors.textSecondary,
     textTransform: 'capitalize',
+    marginBottom: theme.spacing.md,
   },
   conditionsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+    justifyContent: 'space-between',
+    marginTop: theme.spacing.md,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
   },
   conditionItem: {
-    width: '48%',
-    padding: 10,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-  },
-  label: {
-    fontSize: 14,
-    color: '#666',
-  },
-  value: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  forecastGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+    alignItems: 'center',
+    flex: 1,
+  },
+  conditionTextContainer: {
+    marginLeft: theme.spacing.sm,
+  },
+  conditionLabel: {
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.textSecondary,
+  },
+  conditionValue: {
+    fontSize: theme.typography.fontSizes.lg,
+    fontWeight: '600',
+    color: theme.colors.text,
   },
   forecastCard: {
-    width: '100%',
-    padding: 10,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    alignItems: 'center',
+    marginHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
   },
   forecastDay: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  forecastDayText: {
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: '500',
+    color: theme.colors.text,
+    width: 60,
   },
   forecastTemp: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginVertical: 5,
+    fontSize: theme.typography.fontSizes.lg,
+    fontWeight: '700',
+    color: theme.colors.text,
+    width: 60,
+    textAlign: 'center',
   },
-  forecastDescription: {
-    fontSize: 14,
-    color: '#666',
-    textTransform: 'capitalize',
+  forecastHumidity: {
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.textSecondary,
+    width: 50,
+    textAlign: 'right',
   },
-  forecastDetails: {
-    fontSize: 14,
-    color: '#666',
-  },
-  formHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+
+  footer: {
+    padding: theme.spacing.lg,
     alignItems: 'center',
-    marginBottom: 10,
   },
-  toggleText: {
-    fontSize: 16,
-    color: '#007AFF',
-  },
-  formSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 10,
-  },
-  soilInputs: {
-    gap: 10,
-    marginBottom: 20,
-  },
-  inputGroup: {
-    gap: 5,
-  },
-  suggestionText: {
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 24,
+  footerText: {
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.textSecondary,
   },
 });
 

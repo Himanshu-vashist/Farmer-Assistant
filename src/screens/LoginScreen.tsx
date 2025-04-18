@@ -9,9 +9,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import theme from '../theme/theme';
 import { auth } from '../config/firebaseConfig';
 import {
   signInWithEmailAndPassword,
@@ -23,7 +29,12 @@ import {
 } from 'firebase/auth';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from './Navigation'; // Adjust the import path as needed
+
+type RootStackParamList = {
+  MainTabs: undefined;
+  SignUp: undefined;
+  Login: undefined;
+};
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -48,7 +59,7 @@ const LoginScreen: React.FC = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       showMessage('Welcome back, Farmer!', 'success');
-      setTimeout(() => navigation.navigate('Home'), 500); // Slight delay for message visibility
+      setTimeout(() => navigation.navigate('MainTabs'), 500); // Slight delay for message visibility
     } catch (error: any) {
       showMessage('Incorrect email or password. Please try again.', 'error');
     }
@@ -59,7 +70,7 @@ const LoginScreen: React.FC = () => {
     try {
       await signInWithPopup(auth, provider);
       showMessage('Google Sign-In Successful!', 'success');
-      setTimeout(() => navigation.navigate('Home'), 500);
+      setTimeout(() => navigation.navigate('MainTabs'), 500);
     } catch (error: any) {
       showMessage(`Google Sign-In Error: ${error.message}`, 'error');
     }
@@ -82,7 +93,7 @@ const LoginScreen: React.FC = () => {
 
       await signInWithCredential(auth, authCredential);
       showMessage('Apple Sign-In Successful!', 'success');
-      setTimeout(() => navigation.navigate('Home'), 500);
+      setTimeout(() => navigation.navigate('MainTabs'), 500);
     } catch (error: any) {
       showMessage(`Apple Sign-In Error: ${error.message}`, 'error');
     }
@@ -92,9 +103,20 @@ const LoginScreen: React.FC = () => {
     try {
       await signInAnonymously(auth);
       showMessage('Exploring as Guest Farmer!', 'success');
-      setTimeout(() => navigation.navigate('Home'), 500);
+      setTimeout(() => navigation.navigate('MainTabs'), 500);
     } catch (error: any) {
       showMessage(`Guest Login Error: ${error.message}`, 'error');
+    }
+  };
+
+  const [loading, setLoading] = useState(false);
+
+  const handleLoginWithLoading = async () => {
+    setLoading(true);
+    try {
+      await handleLogin();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -103,113 +125,152 @@ const LoginScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
+      <StatusBar barStyle="light-content" />
+
+      {/* Background Gradient */}
+      <LinearGradient
+        colors={[theme.colors.primaryDark, theme.colors.primary]}
+        style={styles.backgroundGradient}
+      />
+
+      {/* Content */}
       <View style={styles.innerContainer}>
         {/* Success/Error Message */}
         {message && (
-          <View
+          <Animated.View
+            entering={FadeInDown.duration(400)}
             style={[
               styles.messageBox,
               messageType === 'success' ? styles.success : styles.error,
             ]}
           >
+            <Ionicons
+              name={messageType === 'success' ? 'checkmark-circle' : 'alert-circle'}
+              size={24}
+              color="#fff"
+              style={{ marginRight: 8 }}
+            />
             <Text style={styles.messageText}>{message}</Text>
-          </View>
+          </Animated.View>
         )}
 
-        {/* Logo */}
-        <Image
-          source={require('../assets/farmer-assistant-logo.jpg')} // Same logo as SignUpScreen
-          style={styles.logo}
-          resizeMode="contain"
-        />
-
-        <Text style={styles.title}>Farmer Assistant</Text>
-        <Text style={styles.subtitle}>Login to grow smarter</Text>
-
-        {/* Email Input */}
-        <View style={styles.inputContainer}>
-          <MaterialCommunityIcons
-            name="email"
-            size={20}
-            color="#6B4E31"
-            style={styles.inputIcon}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#8D6E63"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
-
-        {/* Password Input */}
-        <View style={styles.inputContainer}>
-          <MaterialCommunityIcons
-            name="lock"
-            size={20}
-            color="#6B4E31"
-            style={styles.inputIcon}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#8D6E63"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-          />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            <MaterialCommunityIcons
-              name={showPassword ? 'eye-off' : 'eye'}
-              size={20}
-              color="#6B4E31"
-              style={styles.eyeIcon}
+        {/* Logo and Title Section */}
+        <Animated.View entering={FadeInDown.delay(100).duration(700)} style={styles.headerContainer}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../assets/farmer-assistant-logo.jpg')}
+              style={styles.logo}
+              resizeMode="contain"
             />
+          </View>
+          <Text style={styles.title}>Farmer Assistant</Text>
+          <Text style={styles.subtitle}>Login to grow smarter</Text>
+        </Animated.View>
+
+        {/* Form Section */}
+        <Animated.View entering={FadeInDown.delay(200).duration(700)} style={styles.formContainer}>
+          {/* Email Input */}
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="mail-outline"
+              size={22}
+              color={theme.colors.primary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={theme.colors.textSecondary}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+
+          {/* Password Input */}
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={22}
+              color={theme.colors.primary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor={theme.colors.textSecondary}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeButton}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={22}
+                color={theme.colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Forgot Password */}
+          <TouchableOpacity style={styles.forgotPassword}>
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
-        </View>
 
-        {/* Forgot Password */}
-        <TouchableOpacity style={styles.forgotPassword}>
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
-
-        {/* Login Button */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Login</Text>
-        </TouchableOpacity>
-
-        {/* Divider */}
-        <View style={styles.dividerContainer}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        {/* Social Login Buttons */}
-        <View style={styles.socialLoginContainer}>
-          <TouchableOpacity style={styles.socialButton} onPress={handleGoogleSignIn}>
-            <MaterialCommunityIcons name="google" size={24} color="#DB4437" />
+          {/* Login Button */}
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={handleLoginWithLoading}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Ionicons name="log-in-outline" size={22} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.loginButtonText}>Login</Text>
+              </>
+            )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton} onPress={handleAppleSignIn}>
-            <MaterialCommunityIcons name="apple" size={24} color="#000" />
-          </TouchableOpacity>
-        </View>
+        </Animated.View>
 
-        {/* Guest Login */}
-        <TouchableOpacity style={styles.guestButton} onPress={handleGuestLogin}>
-          <Text style={styles.guestButtonText}>Continue as Guest</Text>
-        </TouchableOpacity>
+        {/* Social Login Section */}
+        <Animated.View entering={FadeInDown.delay(300).duration(700)} style={styles.socialSection}>
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Social Login Buttons */}
+          <View style={styles.socialLoginContainer}>
+            <TouchableOpacity style={styles.socialButton} onPress={handleGoogleSignIn}>
+              <MaterialCommunityIcons name="google" size={24} color="#DB4437" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialButton} onPress={handleAppleSignIn}>
+              <MaterialCommunityIcons name="apple" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Guest Login */}
+          <TouchableOpacity style={styles.guestButton} onPress={handleGuestLogin}>
+            <Ionicons name="person-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.guestButtonText}>Continue as Guest</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
         {/* Sign Up Link */}
-        <View style={styles.signUpContainer}>
+        <Animated.View entering={FadeInDown.delay(400).duration(700)} style={styles.signUpContainer}>
           <Text style={styles.signUpText}>New to Farmer Assistant? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
             <Text style={styles.signUpLink}>Sign Up</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -218,160 +279,199 @@ const LoginScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5', // Light earthy background
+    backgroundColor: theme.colors.background,
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: height * 0.4,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   innerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: width * 0.05, // Responsive padding
+    paddingHorizontal: width * 0.05,
     paddingVertical: height * 0.02,
   },
   messageBox: {
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: height * 0.02,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: theme.borderRadius.lg,
+    marginBottom: 20,
     width: '100%',
     maxWidth: 400,
-    alignItems: 'center',
+    ...theme.shadows.md,
   },
   success: {
-    backgroundColor: '#689F38', // Green for success
+    backgroundColor: theme.colors.success,
   },
   error: {
-    backgroundColor: '#D32F2F', // Red for error
+    backgroundColor: theme.colors.error,
   },
   messageText: {
     color: '#FFF',
-    fontSize: width * 0.04,
-    textAlign: 'center',
+    fontSize: theme.typography.fontSizes.md,
+    flex: 1,
+  },
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  logoContainer: {
+    width: width * 0.28,
+    height: width * 0.28,
+    borderRadius: width * 0.14,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    ...theme.shadows.md,
   },
   logo: {
-    width: width * 0.25, // Responsive logo size
+    width: width * 0.25,
     height: width * 0.25,
-    marginBottom: height * 0.03,
-    borderRadius: 12,
+    borderRadius: width * 0.125,
   },
   title: {
-    fontSize: width * 0.07, // Responsive font size
-    fontWeight: 'bold',
-    color: '#4A2F1B', // Earthy brown
-    marginBottom: height * 0.01,
+    fontSize: theme.typography.fontSizes['3xl'],
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: width * 0.04,
-    color: '#6B4E31', // Muted brown
-    marginBottom: height * 0.04,
+    fontSize: theme.typography.fontSizes.md,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+  },
+  formContainer: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.borderRadius.xl,
+    padding: 24,
+    marginBottom: 24,
+    ...theme.shadows.lg,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    maxWidth: 400, // Limit width on larger screens
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.lg,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    height: 56,
     borderWidth: 1,
-    borderColor: '#A1887F', // Earthy border
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    marginBottom: height * 0.025,
-    backgroundColor: '#FFF8E1', // Light cream background
+    borderColor: theme.colors.border,
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    height: height * 0.06, // Responsive height
-    fontSize: width * 0.04,
-    color: '#4A2F1B',
+    height: '100%',
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.text,
   },
-  eyeIcon: {
-    marginLeft: 10,
+  eyeButton: {
+    padding: 8,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: height * 0.02,
+    marginBottom: 20,
   },
   forgotPasswordText: {
-    color: '#689F38', // Green for links
-    fontSize: width * 0.035,
+    color: theme.colors.primary,
+    fontSize: theme.typography.fontSizes.sm,
+    fontWeight: '500',
   },
   loginButton: {
     width: '100%',
-    maxWidth: 400,
-    backgroundColor: '#689F38', // Green for farming
-    paddingVertical: height * 0.02,
-    borderRadius: 10,
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 14,
+    borderRadius: theme.borderRadius.lg,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: height * 0.025,
+    justifyContent: 'center',
+    ...theme.shadows.md,
   },
   loginButtonText: {
     color: '#FFF',
-    fontSize: width * 0.045,
-    fontWeight: 'bold',
+    fontSize: theme.typography.fontSizes.lg,
+    fontWeight: '600',
   },
-  guestButton: {
+  socialSection: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: '#8D6E63', // Muted brown for guest button
-    paddingVertical: height * 0.02,
-    borderRadius: 10,
     alignItems: 'center',
-    marginBottom: height * 0.025,
-  },
-  guestButtonText: {
-    color: '#FFF',
-    fontSize: width * 0.045,
-    fontWeight: 'bold',
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    maxWidth: 400,
-    marginVertical: height * 0.025,
+    marginBottom: 20,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#A1887F',
+    backgroundColor: theme.colors.border,
   },
   dividerText: {
-    marginHorizontal: 10,
-    color: '#6B4E31',
-    fontSize: width * 0.04,
+    marginHorizontal: 16,
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: '500',
   },
   socialLoginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    width: '40%',
-    maxWidth: 200,
-    marginBottom: height * 0.025,
+    marginBottom: 20,
   },
   socialButton: {
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#A1887F',
-    borderRadius: 50,
-    width: width * 0.12,
-    height: width * 0.12,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF8E1',
-    marginHorizontal: width * 0.02,
+    backgroundColor: theme.colors.card,
+    marginHorizontal: 12,
+    ...theme.shadows.md,
+  },
+  guestButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.secondary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: theme.borderRadius.lg,
+    marginBottom: 20,
+    ...theme.shadows.md,
+  },
+  guestButtonText: {
+    color: '#FFF',
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: '600',
   },
   signUpContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: height * 0.01,
+    marginTop: 8,
   },
   signUpText: {
-    color: '#6B4E31',
-    fontSize: width * 0.04,
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.fontSizes.md,
   },
   signUpLink: {
-    color: '#689F38',
-    fontWeight: 'bold',
-    fontSize: width * 0.04,
+    color: theme.colors.primary,
+    fontWeight: '700',
+    fontSize: theme.typography.fontSizes.md,
   },
 });
 
