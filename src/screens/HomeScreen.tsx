@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,14 +8,18 @@ import {
   Platform,
   TouchableOpacity,
   ScrollView,
+  StatusBar,
+  RefreshControl,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Animated, { FadeIn, FadeInUp, FadeInDown, FadeInRight } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import FeatureCard from '../components/FeatureCard';
 import VoiceSearchBar from '../components/VoiceSearchBar';
 import { Feature } from '../types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import theme from '../theme/theme';
 
 type RootStackParamList = {
   Home: undefined;
@@ -25,6 +29,9 @@ type RootStackParamList = {
   Chatbot: undefined;
   Weather: undefined;
   HowToUse: undefined;
+  Marketplace: undefined;
+  GovernmentInitiatives: undefined;
+  Settings: undefined;
 };
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -37,32 +44,173 @@ const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 const numColumns = width > 768 ? 3 : 2;
 
-const features: Feature[] = [
-  { id: '1', title: 'AI Assistant', screen: 'Chatbot', icon: 'assistant' },
-  { id: '2', title: 'Soil Test', screen: 'SoilTest', icon: 'science' },
-  { id: '3', title: 'Crop Recommendation', screen: 'CropRecommendation', icon: 'grass' },
-  { id: '4', title: 'Plant Detector', screen: 'PlantDetector', icon: 'local-florist' },
-  { id: '5', title: 'Chatbot', screen: 'Chatbot', icon: 'chat' },
-  { id: '6', title: 'Weather Forecast', screen: 'Weather', icon: 'cloud' },
+// Weather data interface
+interface WeatherData {
+  temperature: number;
+  condition: string;
+  icon: string;
+}
+
+// Enhanced Feature interface
+interface EnhancedFeature extends Feature {
+  description: string;
+  color: string;
+}
+
+const features: EnhancedFeature[] = [
+  {
+    id: '1',
+    title: 'Soil Test',
+    description: 'Analyze your soil composition',
+    screen: 'SoilTest',
+    icon: 'leaf-outline',
+    color: theme.colors.success
+  },
+  {
+    id: '2',
+    title: 'Crop Recommendation',
+    description: 'Get personalized crop suggestions',
+    screen: 'CropRecommendation',
+    icon: 'nutrition-outline',
+    color: theme.colors.warning
+  },
+  {
+    id: '3',
+    title: 'Plant Detector',
+    description: 'Identify plants and diseases',
+    screen: 'PlantDetector',
+    icon: 'scan-outline',
+    color: theme.colors.info
+  },
+  {
+    id: '4',
+    title: 'AI Assistant',
+    description: 'Get farming advice from AI',
+    screen: 'Chatbot',
+    icon: 'chatbubble-outline',
+    color: theme.colors.primary
+  },
+  {
+    id: '5',
+    title: 'Weather Forecast',
+    description: 'Check local weather conditions',
+    screen: 'Weather',
+    icon: 'cloud-outline',
+    color: theme.colors.secondary
+  },
+  {
+    id: '6',
+    title: 'Crop Prediction',
+    description: 'Predict crop yields and harvest times',
+    screen: 'CropPrediction',
+    icon: 'analytics-outline',
+    color: theme.colors.tertiary
+  },
+  {
+    id: '7',
+    title: 'Marketplace',
+    description: 'Buy and sell agricultural products',
+    screen: 'Marketplace',
+    icon: 'basket-outline',
+    color: '#673AB7'
+  },
+  {
+    id: '8',
+    title: 'Government Initiatives',
+    description: 'Access government schemes and policies',
+    screen: 'GovernmentInitiatives',
+    icon: 'document-text-outline',
+    color: theme.colors.tertiary
+  },
 ];
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
-  const [isHowToUseOpen, setIsHowToUseOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [weather, setWeather] = useState<WeatherData>({
+    temperature: 24,
+    condition: 'Sunny',
+    icon: 'sunny-outline',
+  });
+  const [greeting, setGreeting] = useState('Good morning');
+  const [userName, setUserName] = useState('Farmer');
 
+  // Tips for farmers
+  const tips = [
+    'Rotate your crops to prevent soil depletion',
+    'Use companion planting to reduce pests naturally',
+    'Conserve water with drip irrigation systems',
+    'Test your soil regularly for optimal fertilization',
+    'Monitor weather forecasts to plan farming activities',
+  ];
+
+  // Set greeting based on time of day
+  useEffect(() => {
+    const hours = new Date().getHours();
+    if (hours < 12) {
+      setGreeting('Good morning');
+    } else if (hours < 18) {
+      setGreeting('Good afternoon');
+    } else {
+      setGreeting('Good evening');
+    }
+  }, []);
+
+  // Simulate fetching weather data
+  useEffect(() => {
+    // In a real app, you would fetch weather data from an API
+    // This is just a simulation
+    const fetchWeather = async () => {
+      // Simulate API call
+      setTimeout(() => {
+        setWeather({
+          temperature: Math.floor(Math.random() * 15) + 15, // Random temp between 15-30
+          condition: ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy'][Math.floor(Math.random() * 4)],
+          icon: ['sunny-outline', 'cloudy-outline', 'rainy-outline', 'partly-sunny-outline'][Math.floor(Math.random() * 4)],
+        });
+      }, 1000);
+    };
+
+    fetchWeather();
+  }, []);
+
+  // Handle pull-to-refresh
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Simulate data fetching
+    setTimeout(() => {
+      // Update weather with new random data
+      setWeather({
+        temperature: Math.floor(Math.random() * 15) + 15,
+        condition: ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy'][Math.floor(Math.random() * 4)],
+        icon: ['sunny-outline', 'cloudy-outline', 'rainy-outline', 'partly-sunny-outline'][Math.floor(Math.random() * 4)],
+      });
+      setRefreshing(false);
+    }, 1500);
+  }, []);
+
+  // Get random tip
+  const getRandomTip = useCallback(() => {
+    return tips[Math.floor(Math.random() * tips.length)];
+  }, [tips]);
+
+  // Render feature card
   const renderFeature = useCallback(
-    ({ item, index }: { item: Feature; index: number }) => {
-      console.log(`Rendering feature: ${item.title}`); // Debug log
+    ({ item, index }: { item: EnhancedFeature; index: number }) => {
       return (
-        <Animated.View entering={FadeInUp.delay(index * 100).duration(500)}>
-          <FeatureCard
-            title={item.title}
-            icon={item.icon}
-            onPress={() => {
-              console.log(`Navigating to ${item.screen}`); // Debug navigation
-              navigation.navigate(item.screen as keyof RootStackParamList);
-            }}
-            style={styles.featureCard}
-          />
+        <Animated.View
+          entering={FadeInRight.delay(400 + index * 100).duration(500)}
+          style={styles.featureCardContainer}
+        >
+          <TouchableOpacity
+            style={[styles.featureCard, { borderLeftColor: item.color }]}
+            onPress={() => navigation.navigate(item.screen as keyof RootStackParamList)}
+          >
+            <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
+              <Ionicons name={item.icon as any} size={24} color="#fff" />
+            </View>
+            <Text style={styles.featureTitle}>{item.title}</Text>
+            <Text style={styles.featureDescription}>{item.description}</Text>
+          </TouchableOpacity>
         </Animated.View>
       );
     },
@@ -70,111 +218,294 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   return (
-    <LinearGradient colors={['#4CAF50', '#81C784']} style={styles.gradientContainer}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.container}>
-          <Animated.Text entering={FadeIn.duration(600)} style={styles.header}>
-            Farmer Assistant
-          </Animated.Text>
-          <VoiceSearchBar style={styles.searchBar} />
-          <FlatList
-            data={features}
-            renderItem={renderFeature}
-            keyExtractor={(item) => item.id}
-            numColumns={numColumns}
-            contentContainerStyle={styles.featureList}
-            key={numColumns}
-          />
-          <View style={styles.howToUseContainer}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+
+      {/* Header with Weather */}
+      <LinearGradient
+        colors={[theme.colors.primary, theme.colors.primaryDark]}
+        style={styles.header}
+      >
+        <Animated.View entering={FadeInDown.duration(500)} style={styles.headerContent}>
+          <View>
+            <Text style={styles.greeting}>{greeting},</Text>
+            <Text style={styles.userName}>{userName}</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.weatherCard}
+            onPress={() => navigation.navigate('Weather')}
+          >
+            <Ionicons name={weather.icon as any} size={24} color={theme.colors.primary} />
+            <Text style={styles.temperature}>{weather.temperature}°C</Text>
+            <Text style={styles.weatherCondition}>{weather.condition}</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </LinearGradient>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />
+        }
+      >
+        {/* Daily Tip */}
+        <Animated.View entering={FadeInDown.delay(200).duration(500)}>
+          <LinearGradient
+            colors={[theme.colors.info, theme.colors.infoLight]}
+            style={styles.tipCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Ionicons name="bulb-outline" size={24} color="#fff" style={styles.tipIcon} />
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Tip of the Day</Text>
+              <Text style={styles.tipText}>{getRandomTip()}</Text>
+            </View>
+          </LinearGradient>
+        </Animated.View>
+
+        {/* Features Section */}
+        <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+          <Text style={styles.sectionTitle}>Features</Text>
+          <View style={styles.featuresGrid}>
+            {features.map((feature, index) => renderFeature({ item: feature, index }))}
+          </View>
+        </Animated.View>
+
+        {/* Quick Actions */}
+        <Animated.View entering={FadeInDown.delay(500).duration(500)}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.quickActions}>
             <TouchableOpacity
-              style={styles.howToUseHeader}
-              onPress={() => {
-                console.log(`Toggling How to Use: ${!isHowToUseOpen}`); // Debug state
-                setIsHowToUseOpen(!isHowToUseOpen);
-              }}
+              style={styles.quickActionButton}
+              onPress={() => navigation.navigate('Weather')}
             >
-              <Text style={styles.howToUseTitle}>How to Use Farmer Assistant</Text>
-              <Icon
-                name={isHowToUseOpen ? 'expand-less' : 'expand-more'}
-                size={24}
-                color="#fff"
-              />
+              <Ionicons name="cloud-outline" size={24} color={theme.colors.primary} />
+              <Text style={styles.quickActionText}>Weather</Text>
             </TouchableOpacity>
-            {isHowToUseOpen && (
-              <Animated.View entering={FadeIn.duration(400)} style={styles.howToUseContent}>
-                <Text style={styles.howToUseText}>
-                  1. **Explore Features**: Tap any card to access tools like Soil Test, Crop
-                  Recommendation, or Weather Forecast.
-                </Text>
-                <Text style={styles.howToUseText}>
-                  2. **Voice Search**: Use the voice search bar to ask questions or navigate
-                  quickly.
-                </Text>
-                <Text style={styles.howToUseText}>
-                  3. **Get Insights**: Each feature provides AI-powered insights to improve your
-                  farming.
-                </Text>
-                <Text style={styles.howToUseText}>
-                  4. **Stay Updated**: Check the Weather Forecast for real-time farming decisions.
-                </Text>
-              </Animated.View>
-            )}
-          </View>
-          <View style={styles.footer}>
-            <TouchableOpacity onPress={() => navigation.navigate('HowToUse')}>
-              <Text style={styles.footerLink}>Learn More</Text>
+
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => navigation.navigate('Marketplace')}
+            >
+              <Ionicons name="basket-outline" size={24} color="#673AB7" />
+              <Text style={styles.quickActionText}>Market</Text>
             </TouchableOpacity>
-            <Text style={styles.footerText}>© 2025 Farmer Assistant</Text>
+
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => navigation.navigate('Chatbot')}
+            >
+              <Ionicons name="chatbubble-outline" size={24} color={theme.colors.primary} />
+              <Text style={styles.quickActionText}>Assistant</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => navigation.navigate('GovernmentInitiatives')}
+            >
+              <Ionicons name="document-text-outline" size={24} color={theme.colors.tertiary} />
+              <Text style={styles.quickActionText}>Govt.</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => navigation.navigate('Settings')}
+            >
+              <Ionicons name="settings-outline" size={24} color={theme.colors.primary} />
+              <Text style={styles.quickActionText}>Settings</Text>
+            </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
+
+        {/* Recent Activity */}
+        <Animated.View entering={FadeInDown.delay(600).duration(500)}>
+          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <View style={styles.activityCard}>
+            <Text style={styles.emptyStateText}>No recent activities</Text>
+            <TouchableOpacity style={styles.startButton}>
+              <Text style={styles.startButtonText}>Start an Activity</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 };
 
+const cardWidth = (width - 48) / 2;
+
 const styles = StyleSheet.create({
-  gradientContainer: { flex: 1, maxWidth: isWeb ? '100vw' : undefined },
-  scrollContainer: { flexGrow: 1 },
   container: {
     flex: 1,
-    padding: isWeb ? 40 : 20,
-    alignItems: 'center',
-    maxWidth: isWeb ? 1200 : undefined,
-    alignSelf: isWeb ? 'center' : undefined,
+    backgroundColor: theme.colors.background,
   },
   header: {
-    fontSize: isWeb && width > 1024 ? 42 : isWeb ? 36 : 28,
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    paddingBottom: 20,
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    ...theme.shadows.md,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  greeting: {
+    fontSize: theme.typography.fontSizes.lg,
+    color: theme.colors.card,
+    opacity: 0.9,
+  },
+  userName: {
+    fontSize: theme.typography.fontSizes['2xl'],
     fontWeight: '700',
-    color: '#fff',
-    textAlign: 'center',
-    marginVertical: isWeb ? 40 : 20,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    color: theme.colors.card,
+    marginTop: 4,
   },
-  searchBar: { marginBottom: 20, width: '100%', maxWidth: 600 },
-  featureList: { paddingBottom: 20, justifyContent: 'center' },
-  featureCard: { margin: 10, width: width / numColumns - 20 },
-  howToUseContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 10,
-    padding: 15,
-    marginTop: 20,
+  weatherCard: {
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.borderRadius.lg,
+    padding: 12,
+    alignItems: 'center',
+    ...theme.shadows.sm,
+  },
+  temperature: {
+    fontSize: theme.typography.fontSizes.lg,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginTop: 4,
+  },
+  weatherCondition: {
+    fontSize: theme.typography.fontSizes.xs,
+    color: theme.colors.textSecondary,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 100,
+  },
+  tipCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: theme.borderRadius.lg,
+    marginBottom: 20,
+    ...theme.shadows.md,
+  },
+  tipIcon: {
+    marginRight: 12,
+  },
+  tipContent: {
+    flex: 1,
+  },
+  tipTitle: {
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: '600',
+    color: theme.colors.card,
+    marginBottom: 4,
+  },
+  tipText: {
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.card,
+    opacity: 0.9,
+  },
+  sectionTitle: {
+    fontSize: theme.typography.fontSizes.xl,
+    fontWeight: '700',
+    color: theme.colors.text,
+    marginBottom: 16,
+    marginTop: 8,
+  },
+  featuresGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  featureCardContainer: {
+    width: cardWidth,
+    marginBottom: 16,
+  },
+  featureCard: {
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.borderRadius.lg,
+    padding: 16,
+    borderLeftWidth: 4,
+    ...theme.shadows.sm,
+    height: 150,
+    justifyContent: 'space-between',
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  featureTitle: {
+    fontSize: theme.typography.fontSizes.md,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 4,
+  },
+  featureDescription: {
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.textSecondary,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  quickActionButton: {
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.borderRadius.lg,
+    padding: 10,
+    alignItems: 'center',
+    width: '18%',
+    ...theme.shadows.sm,
+  },
+  quickActionText: {
+    fontSize: theme.typography.fontSizes.sm,
+    color: theme.colors.text,
+    marginTop: 8,
+  },
+  activityCard: {
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.borderRadius.lg,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 20,
+    ...theme.shadows.sm,
+  },
+  emptyStateText: {
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.textSecondary,
+    marginBottom: 16,
+  },
+  startButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.full,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  startButtonText: {
+    fontSize: theme.typography.fontSizes.sm,
+    fontWeight: '600',
+    color: theme.colors.card,
+  },
+  searchBar: {
+    marginBottom: 20,
     width: '100%',
-    maxWidth: 600,
   },
-  howToUseHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  howToUseTitle: { fontSize: 18, fontWeight: '600', color: '#fff' },
-  howToUseContent: { marginTop: 10 },
-  howToUseText: { fontSize: 14, color: '#fff', marginVertical: 5, lineHeight: 20 },
-  footer: { marginTop: 30, alignItems: 'center' },
-  footerLink: {
-    fontSize: 16,
-    color: '#fff',
-    textDecorationLine: isWeb ? 'underline' : 'none',
-    marginBottom: 10,
-  },
-  footerText: { fontSize: 12, color: '#fff', opacity: 0.7 },
 });
 
 export default HomeScreen;
