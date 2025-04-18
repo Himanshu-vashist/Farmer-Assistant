@@ -1,0 +1,148 @@
+/* Farmer.css */
+
+.farmer-dashboard {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+.farmer-dashboard h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    font-size: 2.2rem;
+}
+
+/* Form sections */
+.registration-section,
+.dashboard-section {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+/* Form styling */
+.register-form,
+.crop-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+/* Form group container */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Input fields */
+.register-form input,
+.crop-form input,
+.crop-form textarea {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+/* Textarea specific styles */
+.crop-form textarea {
+    min-height: 120px;
+    max-width: fit-content;
+    font-family: inherit;
+    
+}
+
+/* Focus states */
+.register-form input:focus,
+.crop-form input:focus,
+.crop-form textarea:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Button styles */
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+button:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Crop cards */
+.crops-list {
+    margin-top: 2rem;
+}
+
+.crop-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #27ae60;
+}
+
+.crop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.delete-btn {
+    background-color: #e74c3c;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+}
+
+/* Error message */
+.error {
+    color: #e74c3c;
+    background-color: #fdecea;
+    padding: 0.8rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .farmer-dashboard {
+        padding: 1rem;
+    }
+
+    .registration-section,
+    .dashboard-section {
+        padding: 1.5rem;
+    }
+}
